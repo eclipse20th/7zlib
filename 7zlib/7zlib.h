@@ -45,7 +45,11 @@ namespace SevenZip
 
 	extern "C" SEVEN_ZIP_API bool Initialize();
 
-	extern "C" SEVEN_ZIP_API ResultCode Compress(const wchar_t* source, const wchar_t* dest, CallbackFunc callback = 0, void* user = 0);
+	/**
+	 * @return ResultCode
+	 * 
+	 */
+	extern "C" SEVEN_ZIP_API ResultCode Compress(const wchar_t* source, const wchar_t* dest, CallbackFunc callback = 0, void* user = 0, bool inner = false);
 
 	extern "C" SEVEN_ZIP_API ResultCode Uncompress(const wchar_t* source, const wchar_t* dest, CallbackFunc callback = 0, void* user = 0);
 

@@ -779,7 +779,7 @@ namespace SevenZip
 		return true;
 	}
 
-	extern "C" ResultCode Compress(const wchar_t* source, const wchar_t* dest, CallbackFunc callback, void* user)
+	extern "C" ResultCode Compress(const wchar_t* source, const wchar_t* dest, CallbackFunc callback, void* user, bool inner)
 	{
 		if (source == NULL)
 		{
@@ -861,7 +861,7 @@ namespace SevenZip
 				CDirItem di;
 				FString name = files[i];
 				FString saveName = name.Mid(subSource.Len(), name.Len() - subSource.Len());
-				if (hasFolder)
+				if (hasFolder && inner)
 				{
 					saveName = folderName + L"\\" + saveName;
 				}
