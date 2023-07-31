@@ -31,11 +31,11 @@ int main()
 		tiuc.id = std::this_thread::get_id();
 		tiuc.content = "Uncompress";
 
-		//SevenZip::ResultCode resultCode1 = SevenZip::Compress(L"E:/coding/data/沈星-高庄  、沈星-田庄线路", L"E:/coding/data/model.gim", TestCallback, &tic);
-		//std::cout << "threadId: " << tic.id << " compress resultCode[" << resultCode1 << "]" << std::endl;
+		SevenZip::ResultCode resultCode1 = SevenZip::Compress(L"E:/coding/data/沈星-高庄  、沈星-田庄线路", L"E:/coding/data/model.gim", TestCallback, &tic);
+		std::cout << "threadId: " << tic.id << " compress resultCode[" << resultCode1 << "]" << std::endl;
 
-		SevenZip::ResultCode resultCode2 = SevenZip::Uncompress(L"E:/coding/data/沈星-高庄  、沈星-田庄线路.gim", L"E:/coding/data/沈星-高庄  、沈星-田庄线路", TestCallback, &tiuc);
-		std::cout << "threadId: " << tiuc.id << " uncompress resultCode[" << resultCode2 << "]" << std::endl;
+		//SevenZip::ResultCode resultCode2 = SevenZip::Uncompress(L"E:/coding/data/沈星-高庄  、沈星-田庄线路.gim", L"E:/coding/data/沈星-高庄  、沈星-田庄线路", TestCallback, &tiuc);
+		//std::cout << "threadId: " << tiuc.id << " uncompress resultCode[" << resultCode2 << "]" << std::endl;
 
 		//SevenZip::ResultCode resultCode1 = compressFunc(L"E:/coding/data/model", L"E:/coding/data/model.gim", nullptr, nullptr);
 		//SevenZip::ResultCode resultCode2 = uncompressFunc(L"E:/coding/data/古溪变电站GIM模型.gim", L"E:/coding/data/古溪变电站GIM模型", nullptr, nullptr);
