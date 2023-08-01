@@ -290,7 +290,7 @@ STDMETHODIMP CArchiveExtractCallback::SetTotal(UInt64 size)
 
 STDMETHODIMP CArchiveExtractCallback::SetCompleted(const UInt64 * completeValue)
 {
-	float percent = (*completeValue) * 100.0 / TotalSize;
+	float percent = (float)((*completeValue) * 100.0 / TotalSize);
 	//std::cout << "Extract completed["<< percent << "%]" << std::endl;
 
 	if (Callback)
@@ -597,7 +597,7 @@ STDMETHODIMP CArchiveUpdateCallback::SetTotal(UInt64 size)
 
 STDMETHODIMP CArchiveUpdateCallback::SetCompleted(const UInt64 *completeValue)
 {
-	float percent = (*completeValue) * 100.0 / TotalSize;
+	float percent = (float)((*completeValue) * 100.0 / TotalSize);
 	//std::cout << "Compress completed[" << percent << "%]" << std::endl;
 
 	if (Callback)
@@ -759,7 +759,7 @@ namespace SevenZip
 	std::vector<std::string> getenv_pathes(bool ignoreEmpty = true)
 	{
 		std::string src = std::getenv("PATH");
-		std::vector<std::string> slist { "C:/Program Files/7-Zip" };
+		std::vector<std::string> slist{ "C:/Program Files/7-Zip" };
 		std::string sep = ";";
 		std::string::size_type start = src.find_first_not_of(sep);
 		while (start != std::string::npos)
@@ -800,13 +800,9 @@ namespace SevenZip
 		{
 			path += "/";
 			std::wstring wpath = s2ws(path);
-			if (lib.Load(FString(wpath.data()) + FTEXT(kDllName)));
+			if (lib.Load(FString(wpath.data()) + FTEXT(kDllName)) 
+				&& (createObjectFunc = (Func_CreateObject)lib.GetProc("CreateObject")))
 			{
-				createObjectFunc = (Func_CreateObject)lib.GetProc("CreateObject");
-				if (!createObjectFunc)
-				{
-					continue;
-				}
 				return true;
 			}
 		}
