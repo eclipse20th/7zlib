@@ -756,23 +756,77 @@ Func_CreateObject createObjectFunc = nullptr;
 
 namespace SevenZip
 {
+	std::vector<std::string> getenv_pathes(bool ignoreEmpty = true)
+	{
+		std::string src = std::getenv("PATH");
+		std::vector<std::string> slist { "C:/Program Files/7-Zip" };
+		std::string sep = ";";
+		std::string::size_type start = src.find_first_not_of(sep);
+		while (start != std::string::npos)
+		{
+			std::string::size_type end = src.find_first_of(sep, start);
+			if (end != std::string::npos)
+			{
+				slist.push_back(std::string(src, start, end - start));
+				if (ignoreEmpty) start = src.find_first_not_of(sep, end);
+				else start = end + 1;
+			}
+			else
+			{
+				slist.push_back(std::string(src, start, src.size() - start));
+				start = end;
+			}
+		}
+		return slist;
+	}
+
+	std::wstring s2ws(const std::string& str) {
+		if (str.empty()) {
+			return L"";
+		}
+		unsigned len = (unsigned)str.size() + 1;
+		setlocale(LC_CTYPE, "");
+		wchar_t* p = new wchar_t[len];
+		mbstowcs(p, str.c_str(), len);
+		std::wstring w_str(p);
+		delete[] p;
+		return w_str;
+	}
+
+	bool load_library()
+	{
+		std::vector<std::string> pathes = getenv_pathes();
+		for (auto path : pathes)
+		{
+			path += "/";
+			std::wstring wpath = s2ws(path);
+			if (lib.Load(FString(wpath.data()) + FTEXT(kDllName)));
+			{
+				createObjectFunc = (Func_CreateObject)lib.GetProc("CreateObject");
+				if (!createObjectFunc)
+				{
+					continue;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
 	extern "C" bool Initialize()
 	{
 		if (!lib.Load(NDLL::GetModuleDirPrefix() + FTEXT(kDllName)))
 		{
-			PrintError("Can not load 7-zip library");
-			return false;
+			//if (!lib.Load(FString(L"C:/Program Files/7-Zip/") + FTEXT(kDllName)))
+			if (!load_library())
+			{
+				PrintError("Can not load 7-zip library");
+				return false;
+			}
 		}
 
-		if (createObjectFunc)
-		{
-			return true;
-		}
-
-		createObjectFunc = (Func_CreateObject)lib.GetProc("CreateObject");
 		if (!createObjectFunc)
 		{
-			PrintError("Can not get CreateObject");
 			return false;
 		}
 
