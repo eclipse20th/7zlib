@@ -2,20 +2,12 @@
 #include "StdAfx.h"
 #include "7zlib.h"
 
-#include <stdlib.h>  
-#include <direct.h> 
-#include <windows.h> 
-#include <string.h>
-#include <string>
-#include <vector>
-#include <io.h>
-#include <time.h>
-#include <stdio.h >  
+#include <vector> 
 #include <iostream>
 
-#include "Common/MyWindows.h"
+//#include "Common/MyWindows.h"
 
-#include "Common/Defs.h"
+//#include "Common/Defs.h"
 #include "Common/MyInitGuid.h"
 
 #include "Common/IntToString.h"
@@ -25,7 +17,7 @@
 #include "Windows/FileDir.h"
 #include "Windows/FileFind.h"
 #include "Windows/FileName.h"
-#include "Windows/NtCheck.h"
+//#include "Windows/NtCheck.h"
 #include "Windows/PropVariant.h"
 #include "Windows/PropVariantConv.h"
 
@@ -793,13 +785,45 @@ namespace SevenZip
 		return w_str;
 	}
 
+	std::wstring convertUTF8toUTF16(const char* source, unsigned sourceLength)
+	{
+#if defined(_WIN32) && !defined(__CYGWIN__)
+		if (sourceLength == 0)
+		{
+			return std::wstring();
+		}
+
+		int destLen = MultiByteToWideChar(CP_UTF8, 0, source, sourceLength, 0, 0);
+		if (destLen <= 0)
+		{
+			std::cout << "Cannot convert UTF-8 string to UTF-16." << std::endl;
+			return std::wstring();
+		}
+
+		std::wstring sDest(destLen, L'\0');
+		destLen = MultiByteToWideChar(CP_UTF8, 0, source, sourceLength, &sDest[0], destLen);
+
+		if (destLen <= 0)
+		{
+			std::cout << "Cannot convert UTF-8 string to UTF-16." << std::endl;
+			return std::wstring();
+		}
+
+		return sDest;
+#else
+		//TODO: Implement for other platforms
+		std::cout << "ConvertUTF8toUTF16 not implemented." << std::endl;
+		return std::wstring();
+#endif
+	}
+
 	bool load_library()
 	{
 		std::vector<std::string> pathes = getenv_pathes();
 		for (auto path : pathes)
 		{
 			path += "/";
-			std::wstring wpath = s2ws(path);
+			std::wstring wpath = convertUTF8toUTF16(path.c_str(), (unsigned)path.length());
 			if (lib.Load(FString(wpath.data()) + FTEXT(kDllName)) 
 				&& (createObjectFunc = (Func_CreateObject)lib.GetProc("CreateObject")))
 			{
@@ -829,8 +853,13 @@ namespace SevenZip
 		return true;
 	}
 
-	extern "C" ResultCode Compress(const wchar_t* source, const wchar_t* dest, CallbackFunc callback, void* user, bool inner)
+	extern "C" ResultCode Compress(const std::wstring& src, const std::wstring& dst, CallbackFunc callback, void* user, bool inner)
 	{
+		PrintString(kCopyrightString);
+
+		const wchar_t* source = src.c_str();
+		const wchar_t* dest = dst.c_str();
+
 		if (source == NULL)
 		{
 			return COMPRESS_BAD_SOURCE;
@@ -900,7 +929,7 @@ namespace SevenZip
 		CMyComPtr<IOutStream> outFileStream = outFileStreamSpec;
 		if (!outFileStreamSpec->Create(archiveName, false))
 		{
-			//PrintError("can't create archive file");
+			PrintError("can't create archive file\n");
 			return COMPRESS_CREATE_ARCHIVE_FILE_ERROR;
 		}
 
@@ -919,7 +948,7 @@ namespace SevenZip
 				NFind::CFileInfo fi;
 				if (!fi.Find(name))
 				{
-					//PrintError("Can't find file", name);
+					PrintError("Can't find file", name);
 					return COMPRESS_FIND_FILE_ERROR;
 				}
 
@@ -937,7 +966,7 @@ namespace SevenZip
 		CMyComPtr<IOutArchive> outArchive;
 		if (createObjectFunc(&CLSID_Format, &IID_IOutArchive, (void **)&outArchive) != S_OK)
 		{
-			//PrintError("Can not get class object");
+			PrintError("Can not get class object");
 			return COMPRESS_GET_CLASS_OBJECT_ERROR;
 		}
 
@@ -971,9 +1000,14 @@ namespace SevenZip
 		}
 		return COMPRESS_OK;
 	}
-
-	extern "C" ResultCode Uncompress(const wchar_t* source, const wchar_t* dest, CallbackFunc callback, void* user)
+	
+	extern "C" ResultCode Uncompress(const std::wstring& src, const std::wstring& dst, CallbackFunc callback, void* user)
 	{
+		PrintString(kCopyrightString);
+
+		const wchar_t* source = src.c_str();
+		const wchar_t* dest = dst.c_str();
+
 		if (source == NULL)
 		{
 			return EXTRACT_BAD_SOURCE;
@@ -987,7 +1021,7 @@ namespace SevenZip
 		CMyComPtr<IInArchive> archive;
 		if (createObjectFunc(&CLSID_Format, &IID_IInArchive, (void **)&archive) != S_OK)
 		{
-			//PrintError("Can not get class object");
+			PrintError("Can not get class object\n");
 			return EXTRACT_GET_CLASS_OBJECT_ERROR;
 		}
 
@@ -998,7 +1032,7 @@ namespace SevenZip
 
 		if (!fileSpec->Open(archiveName))
 		{
-			//PrintError("Can not open archive file", archiveName);
+			PrintError("Can not open archive file", archiveName);
 			return EXTRACT_OPEN_ARCHIVE_FILE_ERROR;
 		}
 
@@ -1013,7 +1047,7 @@ namespace SevenZip
 			const UInt64 scanSize = 1 << 23;
 			if (archive->Open(file, &scanSize, openCallback) != S_OK)
 			{
-				//PrintError("Can not open file as archive", archiveName);
+				PrintError("Can not open file as archive\n", archiveName);
 				return EXTRACT_OPEN_FILE_AS_ARCHIVE_ERROR;
 			}
 		}
@@ -1043,9 +1077,23 @@ namespace SevenZip
 		return EXTRACT_OK;
 	}
 
+	//ResultCode Compress(const std::string & src, const std::string & dst, CallbackFunc callback, void* user, bool inner)
+	//{
+	//	std::wstring source = convertUTF8toUTF16(src.c_str(), (unsigned)src.length());
+	//	std::wstring dest = convertUTF8toUTF16(dst.c_str(), (unsigned)dst.length());
+	//	return Compress(source, dest, callback, user, inner);
+	//}
+
+	//ResultCode Uncompress(const std::string & src, const std::string & dst, CallbackFunc callback, void* user)
+	//{
+	//	std::wstring source = convertUTF8toUTF16(src.c_str(), (unsigned)src.length());
+	//	std::wstring dest = convertUTF8toUTF16(dst.c_str(), (unsigned)dst.length());
+	//	return Uncompress(source, dest, callback, user);
+	//}
+
 	extern "C" void Uninitialize()
 	{
-
+		lib.Free();
 	}
 } // namespace SevenZip
 

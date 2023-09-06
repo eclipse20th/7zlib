@@ -1,5 +1,5 @@
 #pragma once
-
+#include <string>
 
 #ifdef SEVEN_ZIP_LIB
 #	define SEVEN_ZIP_API
@@ -13,7 +13,6 @@
 
 namespace SevenZip
 {
-
 	enum ResultCode
 	{
 		COMPRESS_BAD_SOURCE, // Compress Error: bad source.
@@ -45,13 +44,9 @@ namespace SevenZip
 
 	extern "C" SEVEN_ZIP_API bool Initialize();
 
-	/**
-	 * @return ResultCode
-	 * 
-	 */
-	extern "C" SEVEN_ZIP_API ResultCode Compress(const wchar_t* source, const wchar_t* dest, CallbackFunc callback = 0, void* user = 0, bool inner = false);
+	extern "C" SEVEN_ZIP_API ResultCode Compress(const std::wstring & source, const std::wstring & dest, CallbackFunc callback = 0, void* user = 0, bool inner = false);
 
-	extern "C" SEVEN_ZIP_API ResultCode Uncompress(const wchar_t* source, const wchar_t* dest, CallbackFunc callback = 0, void* user = 0);
+	extern "C" SEVEN_ZIP_API ResultCode Uncompress(const std::wstring & source, const std::wstring & dest, CallbackFunc callback = 0, void* user = 0);
 
 	extern "C" SEVEN_ZIP_API void Uninitialize();
 } // namespace SevenZip
